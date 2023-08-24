@@ -3,6 +3,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
+const { infoLogger, errorLogger } = require("./utils/logger");
 
 const blogSchema = new mongoose.Schema({
   title: String,
@@ -16,10 +17,10 @@ const Blog = mongoose.model("Blog", blogSchema);
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log("connected to MongoDB");
+    infoLogger("connected to MongoDB");
   })
   .catch((error) => {
-    console.log("error connecting to MongoDB", error.message);
+    infoLogger("error connecting to MongoDB", error.message);
   });
 
 app.use(cors());
@@ -41,5 +42,5 @@ app.post("/api/blogs", (request, response) => {
 
 const PORT = 3003;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  infoLogger(`Server running on port ${PORT}`);
 });
