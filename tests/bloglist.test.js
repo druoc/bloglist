@@ -20,14 +20,6 @@ const initialBlogs = [
   },
 ];
 
-beforeEach(async () => {
-  await Blog.deleteMany({});
-  let blogObj = new Blog(initialBlogs[0]);
-  await blogObj.save();
-  blogObj = new Blog(initialBlogs[1]);
-  await blogObj.save();
-});
-
 test("dummy returns 1", () => {
   const blogs = [];
   const result = dummy(blogs);
@@ -94,9 +86,28 @@ describe("total likes", () => {
   });
 });
 
-describe("API calls", () => {
+describe("API GET requests", () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({});
+    let blogObj = new Blog(initialBlogs[0]);
+    await blogObj.save();
+    blogObj = new Blog(initialBlogs[1]);
+    await blogObj.save();
+  });
   test("GET request to /api/blogs returns a 200 status", async () => {
     await api.get("/api/blogs").expect(200);
+  });
+
+  test("GET request to /api/blogs returns the correct amount of blog posts", async () => {
+    const response = await api.get("/api/blogs");
+    expect(response.body).toHaveLength(2);
+  });
+  test("The first blog has 45 likes", async () => {
+    const response = await api.get("/api/blogs");
+    expect(response.body[0].likes).toBe(45);
+  });
+  test("API returns data in JSON format", async () => {
+    await api.get("/api/blogs").expect("Content-Type", /application\/json/);
   });
   afterAll(async () => {
     await mongoose.connection.close();
