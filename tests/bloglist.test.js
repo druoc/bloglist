@@ -1,4 +1,32 @@
 const { dummy, totalLikes } = require("../utils/list_helper");
+const mongoose = require("mongoose");
+const supertest = require("supertest");
+const app = require("../index");
+const api = supertest(app);
+const Blog = require("../models/blog");
+
+const initialBlogs = [
+  {
+    title: "Camambert Will Save All",
+    author: "Arthur Smitheson",
+    url: "https://google.com/cheese",
+    likes: 45,
+  },
+  {
+    title: "Vegan cheese, a modern tragedy",
+    author: "Marcus Grujer",
+    url: "https:cheese.com",
+    likes: 54,
+  },
+];
+
+beforeEach(async () => {
+  await Blog.deleteMany({});
+  let blogObj = new Blog(initialBlogs[0]);
+  await blogObj.save();
+  blogObj = new Blog(initialBlogs[1]);
+  await blogObj.save();
+});
 
 test("dummy returns 1", () => {
   const blogs = [];
@@ -63,5 +91,14 @@ describe("total likes", () => {
     ];
     const result = totalLikes(listWithBlogs);
     expect(result).toBe(40);
+  });
+});
+
+describe("API calls", () => {
+  test("GET request to /api/blogs returns a 200 status", async () => {
+    await api.get("/api/blogs").expect(200);
+  });
+  afterAll(async () => {
+    await mongoose.connection.close();
   });
 });

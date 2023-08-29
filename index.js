@@ -24,3 +24,5 @@ app.use("/api/blogs", blogsRouter);
 app.listen(PORT, () => {
   infoLogger(`Server running on port ${PORT}`);
 });
+
+module.exports = app;
