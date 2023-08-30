@@ -142,6 +142,36 @@ describe("DELETE requests", () => {
   });
 });
 
+describe.only("PATCH requests", () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({});
+    let blogObj = new Blog(initialBlogs[0]);
+    await blogObj.save();
+    blogObj = new Blog(initialBlogs[1]);
+    await blogObj.save();
+  });
+
+  test("successful PATCH request returns a 200 status code and the updated resource", async () => {
+    const response = await api.get("/api/blogs");
+    const id = response.body[0].id;
+    const likesBeforePatch = response.body[0].likes;
+    const likesAmount = {
+      likes: likesBeforePatch + 1,
+    };
+
+    const patchResponse = await api
+      .put(`/api/blogs/${id}`)
+      .send(likesAmount)
+      .expect(200);
+
+    console.log("patchResponse.body:", patchResponse.body);
+
+    const newLikes = patchResponse.body.likes;
+
+    expect(newLikes).toEqual(likesBeforePatch + 1);
+  });
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });
