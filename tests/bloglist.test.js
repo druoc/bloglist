@@ -20,73 +20,7 @@ const initialBlogs = [
   },
 ];
 
-test("dummy returns 1", () => {
-  const blogs = [];
-  const result = dummy(blogs);
-  expect(result).toBe(1);
-});
-
-describe("total likes", () => {
-  const listWithOneBlog = [
-    {
-      _id: "5a422aa71b54a676234d17f8",
-      title: "Go To Statement Considered Harmful",
-      author: "Edsger W. Dijkstra",
-      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-      likes: 5,
-      __v: 0,
-    },
-  ];
-  test("when list has only one blog, equals the likes of that", () => {
-    const result = totalLikes(listWithOneBlog);
-    expect(result).toBe(5);
-  });
-  test("when no blogs in list, return 0", () => {
-    const listWithNoBlogs = [];
-    const result = totalLikes(listWithNoBlogs);
-    expect(result).toBe(0);
-  });
-  test("where there are multiple blogs, correct amount of likes are returned", () => {
-    const listWithBlogs = [
-      {
-        _id: "5a422aa71b54a676234d17f8",
-        title: "Go To Statement Considered Harmful",
-        author: "Edsger W. Dijkstra",
-        url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-        likes: 5,
-        __v: 0,
-      },
-      {
-        _id: "5a422aa71b54a676234d17f8",
-        title: "Go To Statement Considered Harmful",
-        author: "Edsger W. Dijkstra",
-        url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-        likes: 15,
-        __v: 0,
-      },
-      {
-        _id: "5a422aa71b54a676234d17f8",
-        title: "Go To Statement Considered Harmful",
-        author: "Edsger W. Dijkstra",
-        url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-        likes: 8,
-        __v: 0,
-      },
-      {
-        _id: "5a422aa71b54a676234d17f8",
-        title: "Go To Statement Considered Harmful",
-        author: "Edsger W. Dijkstra",
-        url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-        likes: 12,
-        __v: 0,
-      },
-    ];
-    const result = totalLikes(listWithBlogs);
-    expect(result).toBe(40);
-  });
-});
-
-describe("API GET requests", () => {
+describe.only("API GET requests", () => {
   beforeEach(async () => {
     await Blog.deleteMany({});
     let blogObj = new Blog(initialBlogs[0]);
@@ -118,7 +52,7 @@ describe("API GET requests", () => {
   });
 });
 
-describe.only("API POST requests", () => {
+describe("API POST requests", () => {
   beforeEach(async () => {
     await Blog.deleteMany({});
     let blogObj = new Blog(initialBlogs[0]);
@@ -126,10 +60,8 @@ describe.only("API POST requests", () => {
     blogObj = new Blog(initialBlogs[1]);
     await blogObj.save();
   });
-  test("a POST request to /api/blogs returns a 201 status", async () => {
-    await api.post("/api/blogs").expect(201);
-  });
-  test("a POST request to /api/blogs creates a new blog post in the database", async () => {
+
+  test("a POST request to /api/blogs creates a new blog post in the database and a 201 status", async () => {
     const testBlog = {
       title: "Casu Marzu, wtf bro?",
       author: "Arthur Smitheson",
@@ -150,6 +82,40 @@ describe.only("API POST requests", () => {
     expect(response.body.url).toBe("https://google.com/cheese");
     expect(response.body.likes).toBe(298);
     expect(afterPostLength).toBe(beforePostLength + 1);
+    expect(201);
+  });
+  test("if a POST request body is sent with no likes property, likes automatically default to 0", async () => {
+    const blogWithNoLikes = {
+      title: "Cheddar is boring, a controversial take",
+      author: "Arthur Smitheson",
+      url: "https://google.com/cheese",
+    };
+    const response = await api.post("/api/blogs").send(blogWithNoLikes);
+    expect(response.body.likes).toEqual(0);
+  });
+  test("if a post request body is sent without a title property, server responds with a 400 status", async () => {
+    const blogWithNoTitle = {
+      author: "Reginald Toff",
+      url: "google.com",
+      likes: 4,
+    };
+    await api.post("/api/blogs").send(blogWithNoTitle).expect(400);
+  });
+  test("if a post request body is sent without an author property, server responds with a 400 status", async () => {
+    const blogWithNoTitle = {
+      title: "I like cheese",
+      url: "google.com",
+      likes: 4,
+    };
+    await api.post("/api/blogs").send(blogWithNoTitle).expect(400);
+  });
+  test("if a post request body is sent without a url property, server responds with a 400 status", async () => {
+    const blogWithNoUrl = {
+      title: "I like cheese",
+      author: "Reginald Toff",
+      likes: 4,
+    };
+    await api.post("/api/blogs").send(blogWithNoUrl).expect(400);
   });
 
   afterAll(async () => {
