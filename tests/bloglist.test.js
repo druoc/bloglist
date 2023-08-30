@@ -1,9 +1,17 @@
-const { dummy, totalLikes } = require("../utils/list_helper");
 const mongoose = require("mongoose");
 const supertest = require("supertest");
 const app = require("../index");
 const api = supertest(app);
 const Blog = require("../models/blog");
+
+beforeAll(async () => {
+  await mongoose.connect(process.env.TEST_MONGODB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  });
+});
 
 const initialBlogs = [
   {
@@ -20,7 +28,7 @@ const initialBlogs = [
   },
 ];
 
-describe.only("API GET requests", () => {
+describe("API GET requests", () => {
   beforeEach(async () => {
     await Blog.deleteMany({});
     let blogObj = new Blog(initialBlogs[0]);
@@ -46,9 +54,6 @@ describe.only("API GET requests", () => {
   test("retuned data has an id property", async () => {
     const response = await api.get("/api/blogs");
     expect(response.body[0].id).toBeDefined();
-  });
-  afterAll(async () => {
-    await mongoose.connection.close();
   });
 });
 
@@ -117,8 +122,26 @@ describe("API POST requests", () => {
     };
     await api.post("/api/blogs").send(blogWithNoUrl).expect(400);
   });
+});
 
-  afterAll(async () => {
-    await mongoose.connection.close();
+describe("DELETE requests", () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({});
+    let blogObj = new Blog(initialBlogs[0]);
+    await blogObj.save();
+    blogObj = new Blog(initialBlogs[1]);
+    await blogObj.save();
   });
+
+  test.only("delete request to an existing blog returns a 204 status", async () => {
+    const response = await api.get("/api/blogs");
+    const id = response.body[0].id;
+    await api.delete(`/api/blogs/${id}`).expect(204);
+    const blogsAfterDeletion = await api.get("/api/blogs");
+    expect(blogsAfterDeletion.body).toHaveLength(response.body.length - 1);
+  });
+});
+
+afterAll(async () => {
+  await mongoose.connection.close();
 });
