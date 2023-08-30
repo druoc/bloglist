@@ -109,6 +109,49 @@ describe("API GET requests", () => {
   test("API returns data in JSON format", async () => {
     await api.get("/api/blogs").expect("Content-Type", /application\/json/);
   });
+  test("retuned data has an id property", async () => {
+    const response = await api.get("/api/blogs");
+    expect(response.body[0].id).toBeDefined();
+  });
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
+});
+
+describe.only("API POST requests", () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({});
+    let blogObj = new Blog(initialBlogs[0]);
+    await blogObj.save();
+    blogObj = new Blog(initialBlogs[1]);
+    await blogObj.save();
+  });
+  test("a POST request to /api/blogs returns a 201 status", async () => {
+    await api.post("/api/blogs").expect(201);
+  });
+  test("a POST request to /api/blogs creates a new blog post in the database", async () => {
+    const testBlog = {
+      title: "Casu Marzu, wtf bro?",
+      author: "Arthur Smitheson",
+      url: "https://google.com/cheese",
+      likes: 298,
+    };
+
+    const beforePostResponse = await api.get("/api/blogs");
+    const beforePostLength = beforePostResponse.body.length;
+
+    const response = await api.post("/api/blogs").send(testBlog);
+
+    const afterPostResponse = await api.get("/api/blogs");
+    const afterPostLength = afterPostResponse.body.length;
+
+    expect(response.body.title).toBe("Casu Marzu, wtf bro?");
+    expect(response.body.author).toBe("Arthur Smitheson");
+    expect(response.body.url).toBe("https://google.com/cheese");
+    expect(response.body.likes).toBe(298);
+    expect(afterPostLength).toBe(beforePostLength + 1);
+  });
+
   afterAll(async () => {
     await mongoose.connection.close();
   });
