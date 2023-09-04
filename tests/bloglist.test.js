@@ -142,7 +142,7 @@ describe("DELETE requests", () => {
   });
 });
 
-describe.only("PATCH requests", () => {
+describe("PATCH requests", () => {
   beforeEach(async () => {
     await Blog.deleteMany({});
     let blogObj = new Blog(initialBlogs[0]);
@@ -163,8 +163,6 @@ describe.only("PATCH requests", () => {
       .put(`/api/blogs/${id}`)
       .send(likesAmount)
       .expect(200);
-
-    console.log("patchResponse.body:", patchResponse.body);
 
     const newLikes = patchResponse.body.likes;
 
